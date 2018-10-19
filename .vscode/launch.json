@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - EchoClient",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopOnEntry": false,
+            "mainClass": "com.netty.echo.client.EchoClient",
+            "args": "127.0.0.1 8080",
+            "projectName": "netty-echo"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - EchoServer",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopOnEntry": false,
+            "mainClass": "com.netty.echo.server.EchoServer",
+            "args": "8080",
+            "projectName": "netty-echo"
+        }
+    ]
+}
