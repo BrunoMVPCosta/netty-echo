@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 
+import com.netty.echo.cluster.Node;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -35,13 +37,10 @@ public class NettyTransport implements Transport {
     }
 
     public void connectToNode(Node node) throws Exception {
-        if(connections.containsKey(node)) {
-            return;
-        }
+        final Timer timer = new Timer("connecting-timer");
+        final TimerTask task = new ReconnectTask(node);
 
-        Channel channel = bootstrap.connect(node.getHost(), node.getPort()).sync().channel();
-        channel.closeFuture().addListener(new CloseChannelListener());
-        connections.putIfAbsent(node, channel);
+        timer.schedule(task, 1000L, 1000L);
     }
 
     /**
@@ -81,14 +80,17 @@ public class NettyTransport implements Transport {
         }
 
         public void run() {
-            System.out.println("[CLIENT] - Reconnecting");
+            System.out.println("[CLIENT] - " + Thread.currentThread().getName());
             try {
-                connectToNode(node);
-                System.out.println("[CLIENT] - Reconnected");
+                Channel channel = bootstrap.connect(node.getHost(), node.getPort()).sync().channel();
+                channel.closeFuture().addListener(new CloseChannelListener());
+                connections.putIfAbsent(node, channel);
+
+                System.out.println("[CLIENT] - Connected");
                 cancel();
             }
             catch(Exception ex) {
-                System.out.println("[CLIENT] - Reconnect failed " + ex);
+                System.out.println("[CLIENT] - Connecting failed " + ex);
             }
         }
     }

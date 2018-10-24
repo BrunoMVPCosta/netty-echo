@@ -1,5 +1,7 @@
 package com.netty.echo.client;
 
+import com.netty.echo.cluster.Node;
+
 /**
  * Transport
  */
