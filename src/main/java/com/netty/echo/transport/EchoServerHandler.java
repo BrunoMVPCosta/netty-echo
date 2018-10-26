@@ -1,4 +1,4 @@
-package com.netty.echo.server;
+package com.netty.echo.transport;
 
 import java.nio.charset.Charset;
 
@@ -24,15 +24,9 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<String> {
         System.out.println("[SERVER] - " + ctx.channel().remoteAddress() + " has leave!\n");
     }
 
-    // @Override
-    // public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-    //     super.channelRead(ctx, msg);
-    //     System.out.println("[SERVER] - Received: channelRead " + msg);
-    // }
-
     @Override
     public void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
-        
+
         System.out.println("[SERVER] - Received: " + msg);
 
         ctx.writeAndFlush(msg + "\n");
