@@ -1,4 +1,4 @@
-package com.netty.echo.client;
+package com.netty.echo.transport;
 
 import java.util.Map;
 import java.util.Timer;
@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import com.netty.echo.cluster.Node;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -20,10 +21,12 @@ import io.netty.channel.ChannelFutureListener;
 public class NettyTransport implements Transport {
 
     private final Bootstrap bootstrap;
+    private final ServerBootstrap serverBootstrap;
     private final ConcurrentMap<Node, Channel> connections = new ConcurrentHashMap<Node, Channel>();
 
-    public NettyTransport(Bootstrap bootstrap) {
+    public NettyTransport(Bootstrap bootstrap, ServerBootstrap serverBootstrap) {
         this.bootstrap = bootstrap;
+        this.serverBootstrap = serverBootstrap;
     }
 
     public void send(Node node, String message) {

@@ -1,5 +1,6 @@
-package com.netty.echo.client;
+package com.netty.echo;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
@@ -7,13 +8,16 @@ import java.util.UUID;
 import com.netty.echo.cluster.Cluster;
 import com.netty.echo.cluster.DefaultCluster;
 import com.netty.echo.cluster.Node;
-import com.netty.echo.server.EchoServer;
+import com.netty.echo.transport.EchoClientInitializer;
+import com.netty.echo.transport.EchoServerInitializer;
+import com.netty.echo.transport.NettyTransport;
+import com.netty.echo.transport.Transport;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 /**
@@ -70,7 +74,17 @@ public class EchoClient {
             .channel(NioSocketChannel.class)
             .handler(new EchoClientInitializer());
 
-        NettyTransport transport = new NettyTransport(bootstrap);
+        EventLoopGroup serverGroup = new NioEventLoopGroup();
+
+        ServerBootstrap serverBootstrap = new ServerBootstrap();
+        serverBootstrap
+            .group(serverGroup)
+            .channel(NioServerSocketChannel.class)
+            .localAddress(new InetSocketAddress(cluster.getMember().getPort()))
+            .childHandler(new EchoServerInitializer())
+            .bind(cluster.getMember().getPort());
+
+        NettyTransport transport = new NettyTransport(bootstrap, serverBootstrap);
         for (Node node : cluster.getMembers()) {
             transport.connectToNode(node);
         }
@@ -84,9 +98,6 @@ public class EchoClient {
             System.out.println("\t\tport: " + node.getPort());
             System.out.println("--");
         }
-
-        EchoServer server = new EchoServer(cluster.getMember().getPort());
-        server.start();
 
         EchoClient client = new EchoClient(cluster, transport);
         client.start();

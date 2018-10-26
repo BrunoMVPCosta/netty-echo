@@ -1,4 +1,4 @@
-package com.netty.echo.server;
+package com.netty.echo.transport;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -24,7 +24,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("encoder", new StringEncoder());
 
         pipeline.addLast("handler", new EchoServerHandler());
-        
+
         pipeline.addLast("logging", new LoggingHandler(LogLevel.DEBUG));
     }
 }

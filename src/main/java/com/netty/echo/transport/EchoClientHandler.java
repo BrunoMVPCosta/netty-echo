@@ -1,4 +1,4 @@
-package com.netty.echo.client;
+package com.netty.echo.transport;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
