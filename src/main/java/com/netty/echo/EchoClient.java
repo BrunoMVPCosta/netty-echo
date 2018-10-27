@@ -39,7 +39,9 @@ public class EchoClient {
         {
             for (Node node : cluster.getMembers()) {
                 Address address = Address.from(String.format("%s:%d", node.getHost(), node.getPort()));
-                transport.send(address, "[CLIENT:" + cluster.getMember().getPort() + "] to " + node.getPort() + " Message: " + UUID.randomUUID().toString() + "\r\n");
+                String message = "[CLIENT:" + cluster.getMember().getPort() + "] to " + node.getPort() + " Message: " + UUID.randomUUID().toString() + "\r\n";
+
+                transport.send(address, message.getBytes());
             }
             Thread.sleep(2 * 1000);
         }

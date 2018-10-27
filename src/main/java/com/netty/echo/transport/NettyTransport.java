@@ -1,5 +1,6 @@
 package com.netty.echo.transport;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,7 +29,11 @@ public class NettyTransport implements Transport {
         this.serverBootstrap = serverBootstrap;
     }
 
-    public void send(Address address, String message) {
+    public void send(Address address, byte[] payload) {
+        send(address, new String(payload, StandardCharsets.UTF_8));
+    }
+
+    private void send(Address address, String message) {
         Channel channel = connections.get(address);
         if(channel == null) {
             System.out.println("[CLIENT] - Message ignored because channel is null");
