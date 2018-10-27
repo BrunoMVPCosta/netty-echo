@@ -1,13 +1,12 @@
 package com.netty.echo;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 
 import com.netty.echo.cluster.Cluster;
 import com.netty.echo.cluster.DefaultCluster;
 import com.netty.echo.cluster.Node;
+import com.netty.echo.net.Address;
 import com.netty.echo.transport.EchoClientInitializer;
 import com.netty.echo.transport.EchoServerInitializer;
 import com.netty.echo.transport.NettyTransport;
@@ -39,7 +38,8 @@ public class EchoClient {
         while(true)
         {
             for (Node node : cluster.getMembers()) {
-                transport.send(node, "[CLIENT:" + cluster.getMember().getPort() + "] to " + node.getPort() + " Message: " + UUID.randomUUID().toString() + "\r\n");
+                Address address = Address.from(String.format("%s:%d", node.getHost(), node.getPort()));
+                transport.send(address, "[CLIENT:" + cluster.getMember().getPort() + "] to " + node.getPort() + " Message: " + UUID.randomUUID().toString() + "\r\n");
             }
             Thread.sleep(2 * 1000);
         }
@@ -86,7 +86,8 @@ public class EchoClient {
 
         NettyTransport transport = new NettyTransport(bootstrap, serverBootstrap);
         for (Node node : cluster.getMembers()) {
-            transport.connectToNode(node);
+            Address address = Address.from(String.format("%s:%d", node.getHost(), node.getPort()));
+            transport.connectToAddress(address);
         }
 
         System.out.println("Cluster information");

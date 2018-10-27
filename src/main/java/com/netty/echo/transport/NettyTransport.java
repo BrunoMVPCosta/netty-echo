@@ -6,7 +6,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.netty.echo.cluster.Node;
+import com.netty.echo.net.Address;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -21,15 +21,15 @@ public class NettyTransport implements Transport {
 
     private final Bootstrap bootstrap;
     private final ServerBootstrap serverBootstrap;
-    private final ConcurrentMap<Node, Channel> connections = new ConcurrentHashMap<Node, Channel>();
+    private final ConcurrentMap<Address, Channel> connections = new ConcurrentHashMap<Address, Channel>();
 
     public NettyTransport(Bootstrap bootstrap, ServerBootstrap serverBootstrap) {
         this.bootstrap = bootstrap;
         this.serverBootstrap = serverBootstrap;
     }
 
-    public void send(Node node, String message) {
-        Channel channel = connections.get(node);
+    public void send(Address address, String message) {
+        Channel channel = connections.get(address);
         if(channel == null) {
             System.out.println("[CLIENT] - Message ignored because channel is null");
             return;
@@ -38,9 +38,9 @@ public class NettyTransport implements Transport {
         channel.writeAndFlush(message);
     }
 
-    public void connectToNode(Node node) throws Exception {
+    public void connectToAddress(Address address) throws Exception {
         final Timer timer = new Timer("connecting-timer");
-        final TimerTask task = new ReconnectTask(node);
+        final TimerTask task = new ReconnectTask(address);
 
         timer.schedule(task, 1000L, 1000L);
     }
@@ -53,40 +53,40 @@ public class NettyTransport implements Transport {
         public void operationComplete(ChannelFuture future) throws Exception {
             System.out.println("[CLIENT] - Connection closed");
 
-            Node node = null;
-            for(Map.Entry<Node, Channel> entry :  connections.entrySet()) {
+            Address address = null;
+            for(Map.Entry<Address, Channel> entry :  connections.entrySet()) {
                 if(entry.getValue() == future.channel()) {
-                    node = entry.getKey();
+                    address = entry.getKey();
                     Channel channel = entry.getValue();
                     channel.disconnect();
                     break;
                 }
             }
 
-            if(node != null) {
-                connections.remove(node);
+            if(address != null) {
+                connections.remove(address);
             }
 
             final Timer timer = new Timer("reconnect-timer");
-            final TimerTask task = new ReconnectTask(node);
+            final TimerTask task = new ReconnectTask(address);
 
             timer.schedule(task, 1000L, 1000L);
         }
     }
 
     private class ReconnectTask extends TimerTask {
-        private final Node node;
+        private final Address address;
 
-        public ReconnectTask(Node node) {
-            this.node = node;
+        public ReconnectTask(Address address) {
+            this.address = address;
         }
 
         public void run() {
             System.out.println("[CLIENT] - " + Thread.currentThread().getName());
             try {
-                Channel channel = bootstrap.connect(node.getHost(), node.getPort()).sync().channel();
+                Channel channel = bootstrap.connect(address.getHost(), address.getPort()).sync().channel();
                 channel.closeFuture().addListener(new CloseChannelListener());
-                connections.putIfAbsent(node, channel);
+                connections.putIfAbsent(address, channel);
 
                 System.out.println("[CLIENT] - Connected");
                 cancel();
