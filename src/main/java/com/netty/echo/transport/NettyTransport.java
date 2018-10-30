@@ -16,7 +16,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 
 /**
- * TransportImpl
+ * NettyTransport
  */
 public class NettyTransport implements Transport {
 
@@ -33,21 +33,35 @@ public class NettyTransport implements Transport {
         send(address, new String(payload, StandardCharsets.UTF_8));
     }
 
+    /**
+     * Send a message to a specific address.
+     * @param address
+     * @param message
+     */
     private void send(Address address, String message) {
         Channel channel = connections.get(address);
         if(channel == null) {
-            System.out.println("[CLIENT] - Message ignored because channel is null");
-            return;
+            ChannelFuture cf = bootstrap.connect(address.getHost(), address.getPort());
+            cf.addListener(new ChannelFutureListener() {
+
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if(!future.isSuccess()) {
+                        System.out.println("Connection failed " + future.cause());
+                        return;
+                    }
+
+                    Channel channel = future.channel();
+                    channel.closeFuture().addListener(new CloseChannelListener());
+                    connections.putIfAbsent(address, channel);
+
+                    channel.writeAndFlush(message);
+                }
+            });
+
+        } else {
+            channel.writeAndFlush(message);
         }
-
-        channel.writeAndFlush(message);
-    }
-
-    public void connectToAddress(Address address) throws Exception {
-        final Timer timer = new Timer("connecting-timer");
-        final TimerTask task = new ReconnectTask(address);
-
-        timer.schedule(task, 1000L, 1000L);
     }
 
     /**
@@ -70,34 +84,6 @@ public class NettyTransport implements Transport {
 
             if(address != null) {
                 connections.remove(address);
-            }
-
-            final Timer timer = new Timer("reconnect-timer");
-            final TimerTask task = new ReconnectTask(address);
-
-            timer.schedule(task, 1000L, 1000L);
-        }
-    }
-
-    private class ReconnectTask extends TimerTask {
-        private final Address address;
-
-        public ReconnectTask(Address address) {
-            this.address = address;
-        }
-
-        public void run() {
-            System.out.println("[CLIENT] - " + Thread.currentThread().getName());
-            try {
-                Channel channel = bootstrap.connect(address.getHost(), address.getPort()).sync().channel();
-                channel.closeFuture().addListener(new CloseChannelListener());
-                connections.putIfAbsent(address, channel);
-
-                System.out.println("[CLIENT] - Connected");
-                cancel();
-            }
-            catch(Exception ex) {
-                System.out.println("[CLIENT] - Connecting failed " + ex);
             }
         }
     }

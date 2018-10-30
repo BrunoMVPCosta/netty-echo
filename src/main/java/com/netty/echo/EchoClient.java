@@ -87,10 +87,6 @@ public class EchoClient {
             .bind(cluster.getMember().getPort());
 
         NettyTransport transport = new NettyTransport(bootstrap, serverBootstrap);
-        for (Node node : cluster.getMembers()) {
-            Address address = Address.from(String.format("%s:%d", node.getHost(), node.getPort()));
-            transport.connectToAddress(address);
-        }
 
         System.out.println("Cluster information");
         System.out.println("Cluster name: " + cluster.getName());
