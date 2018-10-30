@@ -7,10 +7,12 @@ import com.netty.echo.cluster.Cluster;
 import com.netty.echo.cluster.DefaultCluster;
 import com.netty.echo.cluster.Node;
 import com.netty.echo.net.Address;
-import com.netty.echo.transport.EchoClientInitializer;
-import com.netty.echo.transport.EchoServerInitializer;
-import com.netty.echo.transport.NettyTransport;
+
 import com.netty.echo.transport.Transport;
+import com.netty.echo.transport.netty.EchoClientHandler;
+import com.netty.echo.transport.netty.EchoClientInitializer;
+import com.netty.echo.transport.netty.EchoServerInitializer;
+import com.netty.echo.transport.netty.NettyTransport;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

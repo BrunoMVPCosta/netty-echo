@@ -1,4 +1,4 @@
-package com.netty.echo.transport;
+package com.netty.echo.transport.netty;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.netty.echo.net.Address;
+import com.netty.echo.transport.Transport;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

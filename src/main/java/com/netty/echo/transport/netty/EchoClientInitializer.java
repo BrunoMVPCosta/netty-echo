@@ -1,4 +1,4 @@
-package com.netty.echo.transport;
+package com.netty.echo.transport.netty;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

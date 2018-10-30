@@ -1,10 +1,5 @@
-package com.netty.echo.transport;
+package com.netty.echo.transport.netty;
 
-import java.nio.charset.Charset;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -21,7 +16,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("[SERVER] - " + ctx.channel().remoteAddress() + " has leave!\n");
+        System.out.println("[SERVER] - " + ctx.channel().remoteAddress() + " has left!\n");
     }
 
     @Override
