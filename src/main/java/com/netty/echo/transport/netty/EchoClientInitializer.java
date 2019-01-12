@@ -1,5 +1,9 @@
 package com.netty.echo.transport.netty;
 
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentMap;
+
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -15,6 +19,12 @@ import io.netty.handler.logging.LoggingHandler;
  */
 public class EchoClientInitializer extends ChannelInitializer<SocketChannel> {
 
+    private final ConcurrentMap<UUID, CompletableFuture<byte[]>> futures;
+
+    public EchoClientInitializer(ConcurrentMap<UUID, CompletableFuture<byte[]>> futures) {
+        this.futures = futures;
+    }
+
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
@@ -23,7 +33,7 @@ public class EchoClientInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("decoder", new StringDecoder());
         pipeline.addLast("encoder", new StringEncoder());
 
-        pipeline.addLast("handler", new EchoClientHandler());
         pipeline.addLast("logging", new LoggingHandler(LogLevel.DEBUG));
+        pipeline.addLast("handler", new EchoClientHandler(futures));
     }
 }

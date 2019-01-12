@@ -4,8 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import com.netty.echo.net.Address;
 import com.netty.echo.transport.Transport;
@@ -24,10 +27,12 @@ public class NettyTransport implements Transport {
     private final Bootstrap bootstrap;
     private final ServerBootstrap serverBootstrap;
     private final ConcurrentMap<Address, Channel> connections = new ConcurrentHashMap<Address, Channel>();
+    private final ConcurrentMap<UUID, CompletableFuture<byte[]>> futures;
 
-    public NettyTransport(Bootstrap bootstrap, ServerBootstrap serverBootstrap) {
+    public NettyTransport(Bootstrap bootstrap, ServerBootstrap serverBootstrap, ConcurrentMap<UUID, CompletableFuture<byte[]>> futures) {
         this.bootstrap = bootstrap;
         this.serverBootstrap = serverBootstrap;
+        this.futures = futures;
     }
 
     public void send(Address address, byte[] payload) {
@@ -87,5 +92,21 @@ public class NettyTransport implements Transport {
                 connections.remove(address);
             }
         }
+    }
+
+    @Override
+    public byte[] sendAndReceive(Address address, byte[] payload) {
+        CompletableFuture<byte[]> future = new CompletableFuture<>();
+        String text = new String(payload).replace("\r\n", "");
+        UUID messageId = UUID.fromString(text);
+        futures.putIfAbsent(messageId, future);
+        send(address, payload);
+        try {
+           return future.get(1L * 3000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return "1".getBytes();
+        }
+        // return null;
     }
 }

@@ -2,6 +2,9 @@ package com.netty.echo;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.netty.echo.cluster.Cluster;
 import com.netty.echo.cluster.DefaultCluster;
@@ -41,9 +44,10 @@ public class EchoClient {
         {
             for (Node node : cluster.getMembers()) {
                 Address address = Address.from(String.format("%s:%d", node.getHost(), node.getPort()));
-                String message = "[CLIENT:" + cluster.getMember().getPort() + "] to " + node.getPort() + " Message: " + UUID.randomUUID().toString() + "\r\n";
-
-                transport.send(address, message.getBytes());
+                // String message = "[CLIENT:" + cluster.getMember().getPort() + "] to " + node.getPort() + " Message: " + UUID.randomUUID().toString() + "\r\n";
+                String message = UUID.randomUUID().toString() + "\r\n";
+                byte[] response = transport.sendAndReceive(address, message.getBytes());
+                System.out.println("Received: " + new String(response));
             }
             Thread.sleep(2 * 1000);
         }
@@ -72,11 +76,13 @@ public class EchoClient {
 
         EventLoopGroup group = new NioEventLoopGroup();
 
+        ConcurrentMap<UUID, CompletableFuture<byte[]>> futures = new ConcurrentHashMap<UUID, CompletableFuture<byte[]>>();
+
         Bootstrap bootstrap = new Bootstrap();
         bootstrap
             .group(group)
             .channel(NioSocketChannel.class)
-            .handler(new EchoClientInitializer());
+            .handler(new EchoClientInitializer(futures));
 
         EventLoopGroup serverGroup = new NioEventLoopGroup();
 
@@ -88,7 +94,7 @@ public class EchoClient {
             .childHandler(new EchoServerInitializer())
             .bind(cluster.getMember().getPort());
 
-        NettyTransport transport = new NettyTransport(bootstrap, serverBootstrap);
+        NettyTransport transport = new NettyTransport(bootstrap, serverBootstrap, futures);
 
         System.out.println("Cluster information");
         System.out.println("Cluster name: " + cluster.getName());
